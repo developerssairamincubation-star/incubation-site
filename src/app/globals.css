@@ -1,26 +1,87 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-cream: #f6f1e7;
+  --color-cream-soft: #efe8d9;
+  --color-paper: #fffdf6;
+  --color-ink: #232323;
+  --color-ink-soft: #56503f;
+  --color-gold: #be9e70;
+  --color-rust: #c1502a;
+  --color-line: rgba(117, 111, 97, 0.35);
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Every typeface on the site is Montserrat — `font-serif` is kept as an
+     alias (rather than removed from every component) so italic/label styling
+     still works, it just renders in Montserrat too. */
+  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --animate-marquee-left: marquee-left 42s linear infinite;
+  --animate-marquee-right: marquee-right 222s linear infinite;
+
+  @keyframes marquee-left {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes marquee-right {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
 }
 
+html {
+  background-color: var(--color-cream);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  overflow-x: clip;
+}
+
+::selection {
+  background-color: var(--color-gold);
+  color: var(--color-cream);
+}
+
+/* Native cursor is hidden only once CustomCursor actually mounts (desktop,
+   motion allowed) — touch and prefers-reduced-motion visitors keep it. */
+body.custom-cursor-active,
+body.custom-cursor-active * {
+  cursor: none;
+}
+
+/* Lenis smooth-scroll recommendations */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Pause marquees while hovered */
+.marquee-track:hover > * {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track > * {
+    animation: none !important;
+  }
 }
