@@ -42,16 +42,26 @@ export function BuildCta() {
         { scale: 1 },
         { scale: 14, duration: 1, ease: "power2.in" },
       )
-        .to(title, { color: "#f6f1e7", duration: 0.18 }, 0.62)
-        .to(desc, { color: "rgba(246,241,231,0.85)", duration: 0.18 }, 0.64)
+        .to(
+          title,
+          { color: "#f6f1e7", y: -8, duration: 0.18, ease: "power2.out" },
+          0.24,
+        )
+        .to(
+          desc,
+          { color: "rgba(246,241,231,0.95)", y: -4, duration: 0.18, ease: "power2.out" },
+          0.26,
+        )
         .to(
           button,
           {
             backgroundColor: "#f6f1e7",
             color: "#c1502a",
             duration: 0.18,
+            scale: 1.04,
+            boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
           },
-          0.66,
+          0.28,
         );
 
       return () => {

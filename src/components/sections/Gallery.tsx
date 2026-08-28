@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { GALLERY_ITEMS } from "@/lib/data";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { GALLERY_RETURN_KEY, jumpToY } from "@/lib/lenis";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 
 /**
@@ -194,6 +195,35 @@ export function Gallery() {
           })
           .to({}, { duration: 0.55 });
 
+        // Returning from an event page: land on the gallery with the cards
+        // already dispersed and the conveyor running, rather than at the top
+        // of the page with an empty stage.
+        let restoreFrame = 0;
+        let restoreTimer = 0;
+        if (sessionStorage.getItem(GALLERY_RETURN_KEY)) {
+          const restore = () => {
+            // Cleared only once the restore actually runs — clearing it at
+            // detection time meant StrictMode's throwaway first mount ate the
+            // flag and the real mount had nothing left to act on.
+            sessionStorage.removeItem(GALLERY_RETURN_KEY);
+            ScrollTrigger.refresh();
+            measure();
+            // Re-evaluate the timeline's function-based values against the
+            // freshly measured positions before jumping it to the end.
+            tl.invalidate().progress(1);
+            state.offset = 0;
+            state.active = true;
+            render();
+            jumpToY(st.start);
+            // Re-assert next frame so late scroll restoration can't win.
+            restoreFrame = requestAnimationFrame(() => jumpToY(st.start));
+          };
+          // Deferred a tick so Lenis (created in a parent effect, which runs
+          // after this child effect) exists and the pin spacer is laid out
+          // before `st.start` is read.
+          restoreTimer = window.setTimeout(restore, 120);
+        }
+
         const pause = () => {
           state.paused = true;
         };
@@ -214,6 +244,8 @@ export function Gallery() {
           stage.removeEventListener("pointerenter", pause);
           stage.removeEventListener("pointerleave", resume);
           window.removeEventListener("resize", onResize);
+          window.clearTimeout(restoreTimer);
+          cancelAnimationFrame(restoreFrame);
           st.kill();
           tl.kill();
           state.active = false;
@@ -221,6 +253,17 @@ export function Gallery() {
         };
       },
     );
+
+    // Mobile / reduced motion never runs the pinned timeline above, so the
+    // return flag is consumed here with a plain jump to the section.
+    mm.add("(max-width: 1023px), (prefers-reduced-motion: reduce)", () => {
+      if (!sessionStorage.getItem(GALLERY_RETURN_KEY)) return;
+      const timer = window.setTimeout(() => {
+        sessionStorage.removeItem(GALLERY_RETURN_KEY);
+        jumpToY(section.offsetTop);
+      }, 120);
+      return () => window.clearTimeout(timer);
+    });
 
     return () => mm.revert();
   }, []);
@@ -261,7 +304,7 @@ export function Gallery() {
                 start at y:120vh) with plenty of vertical headroom, so a
                 rotated card's bounding box never gets cut off the way it did
                 when this shorter 56vh box was doing the clipping. */}
-            <div className="relative h-full">
+            <div className="relative h-full z-10">
               {INSTANCES.map((item) => (
                 <div key={item.id} className="absolute top-1/2 left-0 -translate-y-1/2">
                   <GalleryCard
@@ -273,7 +316,7 @@ export function Gallery() {
               ))}
             </div>
           </div>
-          <div className="absolute top-1/2 left-2 z-[2] -translate-y-1/2 xl:left-6">
+          <div className="absolute top-1/2 left-2 z-30 -translate-y-1/2 xl:left-6">
             <button
               type="button"
               aria-label="Previous photos"
@@ -283,7 +326,7 @@ export function Gallery() {
               <ArrowIcon className="rotate-180 text-[38px]" />
             </button>
           </div>
-          <div className="absolute top-1/2 right-2 z-[2] -translate-y-1/2 xl:right-6">
+          <div className="absolute top-1/2 right-2 z-30 -translate-y-1/2 xl:right-6">
             <button
               type="button"
               aria-label="Next photos"

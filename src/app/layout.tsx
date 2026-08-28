@@ -26,7 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${montserrat.variable} antialiased`}>
-      <body>
+      <body suppressHydrationWarning>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "(function(){try{document.body.removeAttribute('data-new-gr-c-s-check-loaded');document.body.removeAttribute('data-gr-ext-installed');}catch(e){} })();",
+          }}
+        />
         <CustomCursor />
         <IntroProvider>
           <SmoothScroll>{children}</SmoothScroll>

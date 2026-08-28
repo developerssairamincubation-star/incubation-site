@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { SITE } from "@/lib/data";
 import { ApplyForm } from "@/components/apply/ApplyForm";
+import ApplyHeaderClient from "@/components/apply/ApplyHeaderClient";
 
 export const metadata: Metadata = {
   title: "Apply for incubation",
@@ -9,29 +11,19 @@ export const metadata: Metadata = {
 };
 
 export default function ApplyPage() {
+
   return (
     <main className="min-h-screen bg-cream">
-      <header className="border-b border-line bg-cream/90 shadow-[0px_0px_13px_rgba(0,0,0,0.06)] backdrop-blur-sm">
-        <div className="mx-auto flex h-[72px] max-w-[1728px] items-center justify-between px-6 lg:px-10">
-          <div className="flex items-center gap-3 text-[15px] font-medium text-ink-soft uppercase">
-            <span className="size-3 bg-gold" aria-hidden />
-            <span>
-              {SITE.name} <span className="text-ink-soft/60">/ Apply</span>
-            </span>
-          </div>
-          <Link
-            href="/"
-            className="text-[13px] font-medium tracking-[0.2em] text-ink-soft uppercase transition-colors hover:text-ink"
-          >
-            ← Back to home
-          </Link>
-        </div>
-      </header>
+      <ApplyHeaderClient />
 
       <div className="mx-auto max-w-[1728px] px-6 py-10 lg:px-10 lg:py-12">
-        <p className="text-[13px] font-medium tracking-[0.2em] text-gold uppercase">
-          Cohort 2026 · Applications open · Reviewed quarterly
-        </p>
+        <div className="flex items-center gap-1">
+            <Link href="/" className="rounded-full bg-cream/70 px-1 py-2 mr-2">
+              <span className="sr-only">Back to home</span>
+              <ArrowIcon className="rotate-180 text-[18px]" />
+            </Link>
+            <h1 className="text-[18px] font-semibold">Back</h1>
+          </div> 
         <h1 className="mt-4 font-bold text-[clamp(34px,3.8vw,58px)] leading-[1.08] text-ink">
           Apply for incubation
         </h1>

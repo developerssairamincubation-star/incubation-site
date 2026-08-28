@@ -2,7 +2,6 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 
 type Photo = { src: string; alt?: string };
@@ -47,23 +46,32 @@ export default function EventGalleryViewer({
           <span>{album.length} photos</span>
         </div>
 
-        <div className="grid h-full min-h-0 grid-cols-2 gap-3 overflow-y-auto pt-14 lg:grid-cols-3 lg:pt-16 pr-3">
+        {/* content-start + auto-rows-min stop the rows from being stretched to
+            fill the fixed height; without them a row can end up shorter than
+            its aspect-ratio tiles, so tiles spill over the row below. */}
+        <div
+          className="grid h-full min-h-0 auto-rows-min content-start grid-cols-2 gap-6 overflow-y-auto pt-14 pr-3 lg:grid-cols-3 lg:gap-8 lg:pt-16"
+          onWheel={(e) => e.stopPropagation()}
+        >
           {album.map((photo, idx) => (
             <button
               key={photo.src}
               onClick={() => openAt(idx)}
-              className={`relative overflow-hidden rounded-[26px] border border-white/70 bg-cream-soft/40 shadow-[0px_10px_28px_rgba(0,0,0,0.08)] ${
+              aria-label={`Open photo ${idx + 1} of ${album.length}`}
+              className={`relative overflow-hidden rounded-[26px] border border-white/70 bg-cream-soft/40 shadow-[0px_10px_28px_rgba(0,0,0,0.08)] p-2 ${
                 idx === 0 ? "col-span-2 aspect-[16/9]" : "aspect-[4/5]"
               }`}
             >
-              <Image
-                src={photo.src}
-                alt={photo.alt ?? ""}
-                fill
-                sizes="(min-width: 1024px) 60vw, 92vw"
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/14 via-transparent to-transparent" />
+              <div className="relative w-full h-full rounded-[22px] overflow-hidden">
+                <Image
+                  src={photo.src}
+                  alt={photo.alt ?? ""}
+                  fill
+                  sizes="(min-width: 1024px) 60vw, 92vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/14 via-transparent to-transparent" />
+              </div>
             </button>
           ))}
         </div>
