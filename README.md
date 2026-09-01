@@ -11,6 +11,7 @@ Animated single-page marketing site for the incubation foundation, built from th
 - **Framer Motion** — entrance reveals, accordion, mobile menu
 - **Lenis** — smooth scrolling, synced with ScrollTrigger
 - **Embla Carousel** — hero image carousel (autoplay + parallax).
+hi
 
 ## Getting started
 
