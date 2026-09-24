@@ -16,8 +16,11 @@
   --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 
-  --animate-marquee-left: marquee-left 42s linear infinite;
-  --animate-marquee-right: marquee-right 222s linear infinite;
+  /* The two logo rows drift in opposite directions at slightly different
+     speeds so they never look locked in step. Each row renders its logos
+     twice, so -50% is exactly one full pass. */
+  --animate-logos-left: marquee-left 80s linear infinite;
+  --animate-logos-right: marquee-right 95s linear infinite;
 
   @keyframes marquee-left {
     from {

@@ -1,60 +1,118 @@
 "use client";
 
+import Image from "next/image";
 import clsx from "clsx";
-import {
-  DPIIT_RECOGNISED_STARTUPS,
-  NON_DPIIT_RECOGNISED_STARTUPS,
-} from "@/lib/data";
+import type { StartupLogo } from "@/lib/content/schema";
 import { scrollToTarget } from "@/lib/lenis";
 import { Reveal } from "@/components/ui/Reveal";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 
+const CARD_CLASSES =
+  "flex h-[92px] min-w-[150px] items-center justify-center rounded-2xl border border-white/50 bg-white/10 px-6 shadow-[0px_8px_24px_rgba(0,0,0,0.06)] backdrop-blur-md md:h-[108px] md:min-w-[170px] md:px-8";
+
+function LogoRow({
+  items,
+  label,
+  duplicate = false,
+}: {
+  items: StartupLogo[];
+  label: string;
+  /** The copy that makes the loop seamless — hidden from assistive tech. */
+  duplicate?: boolean;
+}) {
+  return (
+    <div className="flex shrink-0 items-center" aria-hidden={duplicate || undefined}>
+      {items.map((logo) => {
+        // Capping every mark at the same height makes square badges read as
+        // much smaller than wide wordmarks, so give the squarer ones a taller
+        // cap — it evens out the optical weight across the row.
+        const isWordmark = logo.width / logo.height >= 1.6;
+        const image = (
+          <Image
+            src={logo.src}
+            alt={logo.name}
+            width={logo.width}
+            height={logo.height}
+            // These are final-form, small (≈200px tall) logos, so
+            // re-optimising them buys nothing and costs a transformation per
+            // logo. Eager, because a lazy logo inside a moving track only
+            // starts loading as it slides in — a blank card on the first lap.
+            unoptimized
+            loading="eager"
+            className={clsx(
+              "w-auto object-contain",
+              isWordmark
+                ? "max-h-[46px] md:max-h-[56px]"
+                : "max-h-[68px] md:max-h-[84px]",
+            )}
+          />
+        );
+
+        return (
+          <span key={`${label}-${logo.id}`} className="flex items-center">
+            {logo.url ? (
+              <a
+                href={logo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                // The duplicate is aria-hidden, so it must not be tabbable
+                // either — otherwise keyboard users hit every link twice.
+                tabIndex={duplicate ? -1 : undefined}
+                title={`Visit ${logo.name}`}
+                className={clsx(
+                  CARD_CLASSES,
+                  "transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
+                )}
+              >
+                {image}
+              </a>
+            ) : (
+              <span className={CARD_CLASSES}>{image}</span>
+            )}
+            <span aria-hidden className="mx-4 text-[10px] text-gold">
+              ◆
+            </span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function MarqueeRow({
   items,
   reverse = false,
-  offset = 0,
   label,
 }: {
-  items: string[];
+  items: StartupLogo[];
   reverse?: boolean;
-  offset?: number;
   label: string;
 }) {
-  // Rotate the list so the repeated loop doesn't start on the same name.
-  const names = [...items.slice(offset), ...items.slice(0, offset)];
-  const half = (
-    <div className="flex shrink-0 items-center">
-      {names.map((startup, index) => (
-        <span key={`${label}-${startup}-${index}`} className="flex items-center">
-          <span
-            className={clsx(
-              "rounded-full border border-line/40 bg-paper/80 px-5 py-2 text-[15px] font-medium whitespace-nowrap text-ink/90 shadow-[0px_8px_20px_rgba(0,0,0,0.05)] md:px-7 md:py-3 md:text-[18px]",
-            )}
-          >
-            {startup}
-          </span>
-          <span aria-hidden className="mx-4 text-[10px] text-gold">◆</span>
-        </span>
-      ))}
-    </div>
-  );
-
+  // The row is rendered twice so the -50% keyframe lands exactly where the
+  // loop started.
   return (
     <div className="marquee-track overflow-hidden border-y border-line/50 py-7">
       <div
         className={clsx(
           "flex w-max",
-          reverse ? "animate-marquee-right" : "animate-marquee-left",
+          reverse ? "animate-logos-right" : "animate-logos-left",
         )}
       >
-        {half}
-        <div aria-hidden>{half}</div>
+        <LogoRow items={items} label={label} />
+        <LogoRow items={items} label={`${label}-copy`} duplicate />
       </div>
     </div>
   );
 }
 
-export function Startups() {
+export function Startups({ logos }: { logos: StartupLogo[] }) {
+  if (logos.length === 0) return null;
+
+  // Two rows, split by alternating index rather than cutting the list in
+  // half, so each row gets a similar mix of wide wordmarks and square badges.
+  const rowOne = logos.filter((_, i) => i % 2 === 0);
+  const rowTwo = logos.filter((_, i) => i % 2 === 1);
+
   return (
     <section id="startups" className="relative overflow-hidden py-24 lg:py-36">
       {/* Decorative watermark, kept low in the section (and clipped by
@@ -92,25 +150,11 @@ export function Startups() {
       </div>
 
       <Reveal delay={0.1}>
-        <div className="mt-14">
-          <p className="mx-auto max-w-[1728px] px-6 pb-5 text-[19px] font-medium tracking-[0.12em] text-ink-soft uppercase md:text-[25px] lg:px-16">
-            DPIIT Recognized Startups
-          </p>
-          <MarqueeRow items={DPIIT_RECOGNISED_STARTUPS} label="dpiit" />
-        </div>
-      </Reveal>
-
-      <Reveal delay={0.15}>
-        <div className="mt-14">
-          <p className="mx-auto max-w-[1728px] px-6 pb-5 text-[19px] font-medium tracking-[0.12em] text-ink-soft uppercase md:text-[25px] lg:px-16">
-            Non DPIIT Recognized Startups
-          </p>
-          <MarqueeRow
-            items={NON_DPIIT_RECOGNISED_STARTUPS}
-            reverse
-            offset={15}
-            label="non-dpiit"
-          />
+        <div className="mt-14 flex flex-col gap-6">
+          <MarqueeRow items={rowOne} label="row-1" />
+          {rowTwo.length > 0 && (
+            <MarqueeRow items={rowTwo} reverse label="row-2" />
+          )}
         </div>
       </Reveal>
     </section>

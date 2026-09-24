@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { GALLERY_ITEMS } from "@/lib/data";
+import type { GalleryEvent } from "@/lib/content/schema";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { GALLERY_RETURN_KEY, jumpToY } from "@/lib/lenis";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
@@ -21,14 +21,35 @@ import { ArrowIcon } from "@/components/ui/ArrowIcon";
 
 // Tilt per card instance, echoing the Figma layout.
 const ROTATIONS = [1.26, -5.34, 2.9, -2.72, 3.62, -2.1, 1.8, -3.4];
-// 5 unique photos + 3 repeats so the conveyor loop never shows a hole.
-const INSTANCES = ROTATIONS.map((rotation, i) => ({
-  ...GALLERY_ITEMS[i % GALLERY_ITEMS.length],
-  rotation,
-  id: i,
-}));
 
 const DRIFT_SPEED = 30; // px per second
+
+type CardItem = {
+  id: number;
+  slug: string;
+  caption: string;
+  src: string;
+  rotation: number;
+};
+
+/**
+ * The conveyor needs at least ROTATIONS.length cards to loop without a gap,
+ * so short event lists repeat; longer ones each get their own card.
+ */
+function toCards(events: GalleryEvent[]): CardItem[] {
+  if (events.length === 0) return [];
+  const count = Math.max(ROTATIONS.length, events.length);
+  return Array.from({ length: count }, (_, i) => {
+    const event = events[i % events.length];
+    return {
+      id: i,
+      slug: event.slug,
+      caption: event.caption,
+      src: event.photos[0].src,
+      rotation: ROTATIONS[i % ROTATIONS.length],
+    };
+  });
+}
 
 function GalleryCard({
   item,
@@ -36,7 +57,7 @@ function GalleryCard({
   style,
   href,
 }: {
-  item: (typeof INSTANCES)[number];
+  item: CardItem;
   className?: string;
   style?: React.CSSProperties;
   href: string;
@@ -69,10 +90,11 @@ function GalleryCard({
   );
 }
 
-export function Gallery() {
+export function Gallery({ events }: { events: GalleryEvent[] }) {
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const drift = useRef({ offset: 0, active: false, paused: false });
+  const cardItems = useMemo(() => toCards(events), [events]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -154,7 +176,7 @@ export function Gallery() {
           {
             x: (i) => stackX() + (i % 3) * 8 - 8,
             y: "120vh",
-            rotation: (i) => ROTATIONS[i] * 2.4,
+            rotation: (i) => ROTATIONS[i % ROTATIONS.length] * 2.4,
             scale: 0.92,
           },
           {
@@ -171,7 +193,7 @@ export function Gallery() {
             x: (i) => base[i] - overshoot(),
             y: -10,
             scale: 0.97,
-            rotation: (i) => ROTATIONS[i] * 0.5,
+            rotation: (i) => ROTATIONS[i % ROTATIONS.length] * 0.5,
             duration: 0.16,
             ease: "power2.out",
             stagger: { each: 0.025, from: "center" },
@@ -181,7 +203,7 @@ export function Gallery() {
             x: (i) => base[i],
             y: 0,
             scale: 1,
-            rotation: (i) => ROTATIONS[i],
+            rotation: (i) => ROTATIONS[i % ROTATIONS.length],
             duration: 0.2,
             ease: "power3.inOut",
             stagger: { each: 0.03, from: "center" },
@@ -266,7 +288,7 @@ export function Gallery() {
     });
 
     return () => mm.revert();
-  }, []);
+  }, [cardItems.length]);
 
   const nudge = (direction: 1 | -1) => {
     const state = drift.current;
@@ -289,6 +311,8 @@ export function Gallery() {
     });
   };
 
+  if (cardItems.length === 0) return null;
+
   return (
     <section id="gallery" ref={sectionRef} className="relative overflow-hidden">
       <div className="flex min-h-screen flex-col justify-center py-20">
@@ -305,7 +329,7 @@ export function Gallery() {
                 rotated card's bounding box never gets cut off the way it did
                 when this shorter 56vh box was doing the clipping. */}
             <div className="relative h-full z-10">
-              {INSTANCES.map((item) => (
+              {cardItems.map((item) => (
                 <div key={item.id} className="absolute top-1/2 left-0 -translate-y-1/2">
                   <GalleryCard
                     item={item}
@@ -344,10 +368,10 @@ export function Gallery() {
             data-snap-track
             className="flex snap-x snap-mandatory gap-6 overflow-x-auto px-6 pb-6"
           >
-            {GALLERY_ITEMS.map((item, i) => (
+            {cardItems.slice(0, events.length).map((item) => (
               <GalleryCard
-                key={item.src}
-                item={{ ...item, rotation: ROTATIONS[i], id: i }}
+                key={item.id}
+                item={item}
                 href={`/gallery/${item.slug}`}
                 className="w-[70vw] max-w-[320px] shrink-0 snap-center"
               />

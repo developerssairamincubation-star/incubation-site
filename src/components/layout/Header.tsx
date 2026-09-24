@@ -8,12 +8,14 @@ import { NAV_LINKS } from "@/lib/data";
 import { scrollToTarget } from "@/lib/lenis";
 import { useIntro } from "@/components/providers/IntroProvider";
 
-export function Header() {
+export function Header({ showTeam = false }: { showTeam?: boolean }) {
   const { introDone } = useIntro();
   const [active, setActive] = useState("#home");
   const [menuOpen, setMenuOpen] = useState(false);
+  const links = NAV_LINKS.filter((link) => showTeam || link.href !== "#team");
 
-  // Scroll-spy: highlight the nav link of the section in view.
+  // Scroll-spy: highlight the nav link of the section in view. Sections that
+  // aren't on the page (e.g. #team before any members exist) are skipped.
   useEffect(() => {
     const sections = NAV_LINKS.map((l) =>
       document.querySelector<HTMLElement>(l.href),
@@ -43,7 +45,20 @@ export function Header() {
           type="button"
           onClick={() => goTo("#home")}
           aria-label="Sri Sairam Techno Incubator Foundation — home"
+          className={clsx(
+            "flex items-center gap-2.5 transition-opacity duration-500 lg:gap-4",
+            introDone ? "opacity-100" : "opacity-0",
+          )}
         >
+          <Image
+            src="/images/brand/sairam-institutions.webp"
+            alt="Sairam Institutions"
+            width={818}
+            height={240}
+            priority
+            className="h-7 w-auto lg:h-9"
+          />
+          <span aria-hidden className="h-6 w-px bg-line/50 lg:h-8" />
           <Image
             id="header-logo"
             src="/images/logo.png"
@@ -51,15 +66,12 @@ export function Header() {
             width={158}
             height={58}
             priority
-            className={clsx(
-              "h-12 w-auto transition-opacity duration-500",
-              introDone ? "opacity-100" : "opacity-0",
-            )}
+            className="h-9 w-auto lg:h-12"
           />
         </button>
 
         <nav className="hidden items-center gap-9 lg:flex" aria-label="Primary">
-          {NAV_LINKS.map((link) => (
+          {links.map((link) => (
             <button
               key={link.href}
               type="button"
@@ -115,7 +127,7 @@ export function Header() {
             aria-label="Mobile"
           >
             <div className="flex flex-col px-6 py-4">
-              {NAV_LINKS.map((link) => (
+              {links.map((link) => (
                 <button
                   key={link.href}
                   type="button"

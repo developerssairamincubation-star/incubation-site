@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { SITE } from "@/lib/data";
 import { Reveal } from "@/components/ui/Reveal";
 
@@ -50,7 +51,7 @@ export function Contact() {
                   </a>
                 </p>
               ))}
-              <p className="text-ink-soft">{SITE.instagram}</p>
+              <p className="text-ink-soft">{SITE.linkedin}</p>
             </div>
             <address className="mt-8 text-[17px] leading-relaxed not-italic">
               {SITE.name}
@@ -117,8 +118,17 @@ export function Contact() {
         </div>
       </div>
 
-      <footer className="border-t border-line/40 bg-cream px-6 py-6 text-center text-[13px] text-ink-soft">
-        © {new Date().getFullYear()} {SITE.name}. All rights reserved.
+      <footer className="flex flex-col items-center justify-center gap-3 border-t border-line/40 bg-cream px-6 py-6 text-center text-[13px] text-ink-soft sm:flex-row sm:gap-4">
+        <p>
+          © {new Date().getFullYear()} {SITE.name}. All rights reserved.
+        </p>
+        <Image
+          src="/images/brand/leo-muthu.webp"
+          alt="Sri Leo Muthu"
+          width={480}
+          height={480}
+          className="h-9 w-9 rounded-full object-cover ring-1 ring-line/40"
+        />
       </footer>
     </section>
   );

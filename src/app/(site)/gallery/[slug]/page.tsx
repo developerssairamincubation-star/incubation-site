@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { GALLERY_ITEMS } from "@/lib/data";
 import EventGalleryViewer from "@/components/gallery/EventGalleryViewer";
 import BackToGallery from "@/components/ui/BackToGallery";
 import ScrollContainer from "@/components/ui/ScrollContainer";
+import { getSiteContent } from "@/lib/content/repository";
 
-export function generateStaticParams() {
-  return GALLERY_ITEMS.map((item) => ({ slug: item.slug }));
+async function findEvent(slug: string) {
+  const { gallery } = await getSiteContent();
+  return gallery.find((entry) => entry.slug === slug);
+}
+
+// Events added later in /admin aren't known at build time; they render on
+// first visit and are cached like the rest (dynamicParams defaults to true).
+export async function generateStaticParams() {
+  const { gallery } = await getSiteContent();
+  return gallery.map((item) => ({ slug: item.slug }));
 }
 
 export async function generateMetadata({
@@ -15,7 +23,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const item = GALLERY_ITEMS.find((entry) => entry.slug === slug);
+  const item = await findEvent(slug);
 
   if (!item) {
     return {
@@ -35,7 +43,7 @@ export default async function GalleryEventPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const item = GALLERY_ITEMS.find((entry) => entry.slug === slug);
+  const item = await findEvent(slug);
 
   if (!item) {
     notFound();
@@ -57,7 +65,7 @@ export default async function GalleryEventPage({
             this wrapper stays a plain sizing box — nesting a second bordered
             card here duplicated the pill and squeezed the grid. */}
         <section className="relative min-h-0">
-          <EventGalleryViewer album={item.album} caption={item.caption} />
+          <EventGalleryViewer album={item.photos} caption={item.caption} />
         </section>
 
         <aside className="min-h-0 overflow-hidden rounded-[34px] border border-white/70 bg-paper/70 shadow-[0px_24px_80px_rgba(0,0,0,0.08)] backdrop-blur-sm">

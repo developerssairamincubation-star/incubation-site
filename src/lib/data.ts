@@ -2,7 +2,7 @@ export const SITE = {
   name: "Sri Sairam Techno Incubator Foundation",
   phone: "+91 78451 27111",
   emails: ["incubation@sairam.edu.in", "queries.rd@sairam.edu.in"],
-  instagram: "@techno_incubator_sairam",
+  linkedin: "https://www.linkedin.com/in/sstif/",
   address: "Sai Leo Nagar, West Tambaram, Chennai — 600 044",
   mapQuery: "Sri Sairam Techno Incubator Foundation, Sai Leo Nagar, West Tambaram, Chennai",
 };
@@ -15,17 +15,25 @@ export const NAV_LINKS = [
   { label: "Thrust areas", href: "#thrust-areas" },
   { label: "Startups", href: "#startups" },
   { label: "Gallery", href: "#gallery" },
+  // Hidden by the Header until at least one team member is added in /admin.
+  { label: "Team", href: "#team" },
   { label: "Contact", href: "#contact" },
 ];
 
+// HERO_SLIDES, STARTUP_LOGOS and GALLERY_ITEMS below are the site's *initial*
+// content only. Once the database is connected they're copied in as seed data
+// and from then on are edited at /admin — changing them here won't update a
+// live site. See src/lib/content/.
 export const HERO_SLIDES = [
   { src: "/images/hero/slide-1.jpg", alt: "Incubation co-working floor" },
   { src: "/images/hero/slide-2.jpg", alt: "Startup teams at work" },
-  { src: "/images/hero/slide-3.jpg", alt: "Campus innovation labs" },
+  { src: "/images/hero/slide-3.jpg", alt: "cosmos inauguration" },
+  { src: "/images/hero/slide-4.jpg", alt: "CEO talk" },
+  { src: "/images/hero/slide-5.jpg", alt: "poster" },
 ];
 
 export const STATS = [
-  { value: 92, label: "Startups Incubated" },
+  { value: 165, label: "Startups Incubated" },
   { value: 32, label: "Women led startups" },
   { value: 12, label: "Defense startups" },
   { value: 7, label: "Thrust areas" },
@@ -69,111 +77,287 @@ export const FOCUS_AREAS = [
   },
 ];
 
-export const DPIIT_RECOGNISED_STARTUPS = [
-  "Armor Grandeur Private Limited",
-  "Creasys Technologies LLP",
-  "Universys Technologies",
-  "Sanjmar Industries (OPC) Private Limited",
-  "MAM Industries (OPC) Private Limited",
-  "Genik Technologies Private Limited",
-  "LMES Academy Private Limited",
-  "Hakate Technologies Private Limited",
-  "Ernosys Technologies LLP",
-];
-
-export const NON_DPIIT_RECOGNISED_STARTUPS = [
-  "Techno Raise Private Limited",
-  "Blunav Technologies Private Limited",
-  "Ideal Engineerig Training and consultancy",
-  "Sasa Printwear Pvt Ltd",
-  "Vidhai Art Space",
-  "Sri Sai Fusion Techno Works",
-  "Jai Sriram Coatings",
-  "Uru",
-  "Creasys Technologies LLP",
-  "Universys Technologies",
-  "Bigus 12 Technologies",
-  "Smile Healthcare Technologies",
-  "Srikart Technologies & Solutions",
-  "Flare Innovations",
-  "Senter",
-  "Vision",
-  "Big Bucks Innovation",
-  "Mice Berry India Private Limited",
-  "Genik Technologies",
-  "AH Enterprises",
-  "Techyy Service Center",
-  "10004U",
-  "Skycatch Bots",
-  "Sai Mistra Automations",
-  "Softrate India",
-  "Evalley Corporation",
-  "Suvalaks Technologies",
-  "Boomi Pooja Life Style Compact Homes",
-  "Reva Engineering Services",
-  "Task Development",
-  "Solaris India Power Solution",
-  "VNM Jothi Fabrication",
-  "Sri Amman Engineering Works",
-  "Curious Wings",
-  "Pang Wangle Technologies",
-  "Kalam Innovation",
-  "GP Innotech Advanced Solution",
-  "Sai Organic Pro Plus",
-  "AD Astra Group Of Companies",
-  "Agsaimo",
-  "Zero Solutions",
-  "ZPM Enterprises",
-  "SPNP Company",
-  "Klot Industries",
-  "RSMH Enterprises",
-  "Balaguhan Enterprises",
-  "EDGES",
-  "Monts India",
-  "Grad",
-  "Soorai Venkatesan Enterprises",
-  "Dhurgeshraaman Technologies And Enterprises",
-  "Revo Technologies And Enterprises",
-  "Bjsai Enterprises",
-  "APR Technologies",
-  "Cyber Space Soluations",
-  "Pencer Enterprises",
-  "VSN Technology",
-  "SJ Industries",
-  "Extronics",
-  "Infinity Limited",
-  "Entdeckon",
-  "Pavithram Ayurveda Pharmacy",
-  "LMES Academy Private Limited",
-  "Hakate Technologies Private limited",
-  "Samudra Robotics",
-  "Spark",
-  "Armor Grandeur Private Limited",
-  "Yash in Enterprises",
-  "Toofan",
-  "Mam Industries (OPS) Private Limited",
-  "Sanjmar Industries (OPS) Private Limited",
-  "Kalam Institute For Technical Education Kite",
-  "Spark Tech",
-  "Theran Siddha Pharmacy",
-  "Wecosmart",
-  "Techno Quest Consultancy",
-  "Sparks",
-  "Innoprime Plast Private Limited",
-  "Ernosys Technologies LLP",
-  "Ada Lovelace Foundation",
-  "Ada Lovelace Software Private Limited",
-  "M K Tech",
-  "Vidhaan Educare Private Limited",
-  "Nirloba It Private Limited",
-  "Heptag Solutions Private Limited",
-  "S3 Construction",
-  "Math Software Square (OPC) private limited",
-  "Fluezen technology Private limited",
-  "Vecmocon Technologies Pvt Ltd",
-  "HEBESEC Technologies Private Limited",
-  "M K Tech",
-  "spark invotech private Limited",
+// Every incubated startup's logo, converted from the supplied PNGs to WebP and
+// normalised to a 200px-tall box (widths vary with each mark's aspect ratio).
+export const STARTUP_LOGOS: {
+  name: string;
+  src: string;
+  width: number;
+  height: number;
+}[] = [
+  {
+    name: "4Friends",
+    src: "/images/startup-logos/4friends.webp",
+    width: 200,
+    height: 200,
+  },
+  {
+    name: "Adapt Robotics",
+    src: "/images/startup-logos/adapt.webp",
+    width: 195,
+    height: 200,
+  },
+  {
+    name: "Agsaimo",
+    src: "/images/startup-logos/agsaimo.webp",
+    width: 367,
+    height: 200,
+  },
+  {
+    name: "Airman",
+    src: "/images/startup-logos/airman.webp",
+    width: 1018,
+    height: 200,
+  },
+  {
+    name: "Apex Race Technologies",
+    src: "/images/startup-logos/apex.webp",
+    width: 436,
+    height: 200,
+  },
+  {
+    name: "Aquawrap",
+    src: "/images/startup-logos/aquawrap.webp",
+    width: 925,
+    height: 200,
+  },
+  {
+    name: "Armor Grandeur Private Limited",
+    src: "/images/startup-logos/armor-grandeur.webp",
+    width: 221,
+    height: 200,
+  },
+  {
+    name: "Authify",
+    src: "/images/startup-logos/authify.webp",
+    width: 644,
+    height: 200,
+  },
+  {
+    name: "Blunav Technologies Private Limited",
+    src: "/images/startup-logos/blunav.webp",
+    width: 1088,
+    height: 200,
+  },
+  {
+    name: "Curious Wings",
+    src: "/images/startup-logos/curious.webp",
+    width: 252,
+    height: 200,
+  },
+  {
+    name: "DD Chocolates",
+    src: "/images/startup-logos/dd-chocolate.webp",
+    width: 204,
+    height: 200,
+  },
+  {
+    name: "Ecomotive",
+    src: "/images/startup-logos/ecomotive.webp",
+    width: 849,
+    height: 200,
+  },
+  {
+    name: "Edwisely",
+    src: "/images/startup-logos/ed-wisely.webp",
+    width: 540,
+    height: 200,
+  },
+  {
+    name: "Fluezen Technology",
+    src: "/images/startup-logos/fluzen.webp",
+    width: 200,
+    height: 200,
+  },
+  {
+    name: "Genik Technologies Private Limited",
+    src: "/images/startup-logos/genik.webp",
+    width: 1026,
+    height: 200,
+  },
+  {
+    name: "GT",
+    src: "/images/startup-logos/gt.webp",
+    width: 222,
+    height: 200,
+  },
+  {
+    name: "HB",
+    src: "/images/startup-logos/hb.webp",
+    width: 304,
+    height: 200,
+  },
+  {
+    name: "Hebesec Technologies Private Limited",
+    src: "/images/startup-logos/hebesec-tech.webp",
+    width: 578,
+    height: 200,
+  },
+  {
+    name: "IASPL",
+    src: "/images/startup-logos/iaspl.webp",
+    width: 329,
+    height: 200,
+  },
+  {
+    name: "Innoprime Plast Private Limited",
+    src: "/images/startup-logos/ippl.webp",
+    width: 593,
+    height: 200,
+  },
+  {
+    // TODO: this logo (supplied as "iytr7uyrlo86r.png") carries no readable
+    // wordmark, so the company behind it is unconfirmed — swap in the real
+    // name and rename the file when you know it.
+    name: "Incubated startup",
+    src: "/images/startup-logos/iytr7uyrlo86r.webp",
+    width: 271,
+    height: 200,
+  },
+  {
+    name: "Ji",
+    src: "/images/startup-logos/ji.webp",
+    width: 200,
+    height: 200,
+  },
+  {
+    name: "Kite Robotics",
+    src: "/images/startup-logos/kites-robotics.webp",
+    width: 200,
+    height: 200,
+  },
+  {
+    name: "LMES Academy Private Limited",
+    src: "/images/startup-logos/lmes.webp",
+    width: 729,
+    height: 200,
+  },
+  {
+    name: "Sri Matimaging Technologies",
+    src: "/images/startup-logos/matimaging.webp",
+    width: 753,
+    height: 200,
+  },
+  {
+    name: "Miceberry India Private Limited",
+    src: "/images/startup-logos/miceberry.webp",
+    width: 588,
+    height: 200,
+  },
+  {
+    name: "Neurotronix",
+    src: "/images/startup-logos/neurotronix.webp",
+    width: 145,
+    height: 200,
+  },
+  {
+    name: "Oneyes Infotech Solutions",
+    src: "/images/startup-logos/oneyes.webp",
+    width: 411,
+    height: 200,
+  },
+  {
+    name: "Pavithram Ayurveda Pharmacy",
+    src: "/images/startup-logos/pavithram.webp",
+    width: 347,
+    height: 200,
+  },
+  {
+    name: "PlayuNxt",
+    src: "/images/startup-logos/playunxt.webp",
+    width: 794,
+    height: 200,
+  },
+  {
+    name: "Printwear",
+    src: "/images/startup-logos/printwear.webp",
+    width: 729,
+    height: 200,
+  },
+  {
+    name: "SAK Automation Private Limited",
+    src: "/images/startup-logos/sak.webp",
+    width: 676,
+    height: 200,
+  },
+  {
+    name: "SIIT",
+    src: "/images/startup-logos/siit.webp",
+    width: 196,
+    height: 200,
+  },
+  {
+    name: "Silaii",
+    src: "/images/startup-logos/silaii.webp",
+    width: 359,
+    height: 200,
+  },
+  {
+    name: "Skycatch Bots",
+    src: "/images/startup-logos/skycatch.webp",
+    width: 200,
+    height: 200,
+  },
+  {
+    name: "Softrate",
+    src: "/images/startup-logos/softrate.webp",
+    width: 304,
+    height: 200,
+  },
+  {
+    name: "Spark Invotech Private Limited",
+    src: "/images/startup-logos/spark-invotech.webp",
+    width: 224,
+    height: 200,
+  },
+  {
+    name: "Spreco",
+    src: "/images/startup-logos/spreco.webp",
+    width: 340,
+    height: 200,
+  },
+  {
+    name: "Sri Sai Fusion Techno Works",
+    src: "/images/startup-logos/sri-sai-fusion.webp",
+    width: 293,
+    height: 200,
+  },
+  {
+    name: "Theeran Siddha Pharmacy",
+    src: "/images/startup-logos/theeran-siddha.webp",
+    width: 200,
+    height: 200,
+  },
+  {
+    name: "Tunett",
+    src: "/images/startup-logos/tunett.webp",
+    width: 278,
+    height: 200,
+  },
+  {
+    name: "Uru",
+    src: "/images/startup-logos/uru.webp",
+    width: 200,
+    height: 200,
+  },
+  {
+    name: "Vecmocon Technologies Private Limited",
+    src: "/images/startup-logos/vecmocon.webp",
+    width: 519,
+    height: 200,
+  },
+  {
+    name: "Vzync Studios Private Limited",
+    src: "/images/startup-logos/vzync.webp",
+    width: 230,
+    height: 200,
+  },
+  {
+    name: "Zecurit",
+    src: "/images/startup-logos/zecurit.webp",
+    width: 606,
+    height: 200,
+  },
 ];
 
 type EventInput = {
@@ -260,3 +444,42 @@ export const ABOUT_ROWS = [
     link: { label: "See if you're a fit", href: "#contact" },
   },
 ];
+
+// The four headline numbers from SSTIF's "Powering Innovation, Building
+// Impact" one-pager. `icon` is a key rather than a component so this stays
+// framework-agnostic — About.tsx maps it to the matching StatIcons export.
+export const FOUNDATION_STATS = [
+  { icon: "rocket", value: "165", label: "Startups" },
+  { icon: "building", value: "75,000+", label: "Sq ft. innovation space" },
+  { icon: "rupee", value: "₹11 Cr", label: "External fundings" },
+  {
+    icon: "infra",
+    value: "₹10+ Cr",
+    label: "Infrastructure & research investment",
+  },
+] as const;
+
+export const GLOBAL_COLLAB = {
+  heading: "Global collaborations & initiatives",
+  text: "Sairam Institutions' global outlook is equally impressive. It recently organised Build 2Gether International — a 24-hour AI SDG hackathon with ETH Zurich and Nanyang Technological University that drew 2,000+ participants across 500+ teams — and is hosting the ESG & Sustainability Leadership Summit 2026 in Chennai, bringing together leaders from academia, industry and governance.",
+};
+
+// Short summary of the wider Sairam Innovation Ecosystem, shown just below
+// the foundation section with a link out to the group's own microsite.
+export const ECOSYSTEM_LINK = "https://innovation.sairamgroup.in/";
+
+export const ECOSYSTEM_STATS = [
+  { value: "25,000+", label: "Students" },
+  { value: "2,000+", label: "Faculty members" },
+  { value: "2020", label: "SSTIF established" },
+] as const;
+
+export const ECOSYSTEM_CONTENT = {
+  eyebrow: "The wider ecosystem",
+  heading: "Part of the Sairam Innovation Ecosystem",
+  paragraphs: [
+    "Sairam Institutions is one of India's most progressive educational ecosystems, with 25,000+ students and 2,000+ faculty working across academic excellence, innovation, entrepreneurship and sustainability.",
+    "SSTIF is its flagship platform — built in 2020 on the philosophy of “One Student, One Startup”, driving a competition-based innovation pedagogy aligned with the UN Sustainable Development Goals, and backed by industry partners including SIRD, Unnat Bharat Abhiyan, TIEMA, AIEMA and PETC.",
+  ],
+  quote: "One Student, One Startup",
+};

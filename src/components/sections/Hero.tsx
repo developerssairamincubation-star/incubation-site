@@ -8,7 +8,8 @@ import type { EmblaCarouselType } from "embla-carousel";
 import { motion } from "framer-motion";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { HERO_SLIDES, SITE } from "@/lib/data";
+import { SITE } from "@/lib/data";
+import type { HeroSlide } from "@/lib/content/schema";
 import { useIntro } from "@/components/providers/IntroProvider";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { gsap } from "@/lib/gsap";
@@ -30,7 +31,7 @@ const item = {
   },
 };
 
-export function Hero() {
+export function Hero({ slides }: { slides: HeroSlide[] }) {
   const { introDone } = useIntro();
   const sectionRef = useRef<HTMLElement>(null);
   const router = useRouter();
@@ -127,7 +128,7 @@ export function Hero() {
         *
       </div>
 
-      <div className="mx-auto grid max-w-[1728px] items-center gap-12 px-6 pt-10 pb-16 lg:grid-cols-[1fr_minmax(0,44%)] lg:px-16 lg:pt-16">
+      <div className="mx-auto grid max-w-[1728px] items-center gap-12 px-6 pt-10 pb-16 lg:grid-cols-[1fr_minmax(0,48%)] lg:px-16 lg:pt-16">
         <motion.div
           variants={container}
           initial="hidden"
@@ -189,9 +190,9 @@ export function Hero() {
             aria-label="Campus photo carousel"
           >
             <div className="flex touch-pan-y">
-              {HERO_SLIDES.map((slide, i) => (
-                <div key={slide.src} className="min-w-0 flex-[0_0_100%]">
-                  <div className="relative h-[46vh] overflow-hidden rounded-[28px] md:h-[64vh] lg:h-[72vh]">
+              {slides.map((slide, i) => (
+                <div key={slide.id} className="min-w-0 flex-[0_0_100%]">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-[28px]">
                     <div data-parallax className="absolute inset-[-15%_-18%]">
                       <Image
                         src={slide.src}
@@ -212,9 +213,9 @@ export function Hero() {
             role="tablist"
             aria-label="Carousel slides"
           >
-            {HERO_SLIDES.map((slide, i) => (
+            {slides.map((slide, i) => (
               <button
-                key={slide.src}
+                key={slide.id}
                 type="button"
                 role="tab"
                 aria-selected={selected === i}

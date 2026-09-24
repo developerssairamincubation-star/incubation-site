@@ -63,3 +63,59 @@ public/
   for an API route when a backend is ready.
 - All heavy animations respect `prefers-reduced-motion` and fall back to
   simpler layouts on mobile.
+
+## Admin panel (`/admin`)
+
+Sign in at **`/admin`** (not linked from the public site) to add, edit,
+reorder and remove:
+
+- **Hero images** — the home-page carousel
+- **Gallery events** — label, title, description and up to 5 photos each; each
+  event gets its own `/gallery/<slug>` page (the slug never changes once saved,
+  so shared links keep working)
+- **Startup logos** — logo, name and an optional website the logo links to
+- **Team members** — photo, name, role and description (the Team section and
+  its menu link appear once at least one member is saved)
+
+Edits stay in the browser until **Save changes**, which updates the live site
+immediately. Photos are resized in the browser before upload, so large camera
+photos are fine.
+
+### One-time setup on Vercel
+
+1. **Database:** Vercel → this project → Storage → Create Database → **Neon**.
+   This adds `DATABASE_URL` automatically.
+2. **Image storage:** Storage → Create → **Blob**. This adds
+   `BLOB_READ_WRITE_TOKEN` automatically.
+3. **Admin login:** run `npm run admin:hash` locally, choose a password
+   (12+ characters) at the hidden prompt, and add the printed values plus a
+   username to Settings → Environment Variables:
+   - `ADMIN_USERNAME` — e.g. `admin`
+   - `ADMIN_PASSWORD_HASH` — printed by the script
+   - `SESSION_SECRET` — printed by the script
+4. **Redeploy.** On first load the database is filled with the site's current
+   content, so nothing changes until you edit it.
+
+To change the password later, run `npm run admin:hash` again, replace
+`ADMIN_PASSWORD_HASH` and redeploy — every existing session is signed out.
+
+### How it works
+
+- Content lives in Postgres as one validated JSON document per section
+  (`src/lib/content/`). The public pages are static and are regenerated when
+  you save. Without a `DATABASE_URL` the site falls back to the content in
+  `src/lib/data.ts`.
+- Sign-in uses a signed, HTTP-only session cookie (12 hours) scoped to
+  `/admin`. Every admin page and server action checks it; `src/proxy.ts` only
+  redirects early. Five failed sign-ins lock an IP out for 15 minutes.
+- Saving is refused if the section changed in another tab since you opened it,
+  so edits can't silently overwrite each other.
+- Unused uploaded images are deleted automatically. Images shipped in
+  `public/images` are never deleted.
+
+### Local development
+
+Copy `.env.example` to `.env.local` and fill in the admin values and a
+`DATABASE_URL` (any Postgres works, e.g. `vercel env pull`). Leave
+`BLOB_READ_WRITE_TOKEN` empty and uploads are saved to `public/uploads`
+(git-ignored) instead.

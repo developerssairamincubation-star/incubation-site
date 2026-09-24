@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
-import { IntroProvider } from "@/components/providers/IntroProvider";
-import { SmoothScroll } from "@/components/providers/SmoothScroll";
-import { CustomCursor } from "@/components/ui/CustomCursor";
 
 // The whole site uses Montserrat — both weights and italic are loaded since
 // several labels lean on font-style: italic.
@@ -32,10 +29,7 @@ export default function RootLayout({
             __html: "(function(){try{document.body.removeAttribute('data-new-gr-c-s-check-loaded');document.body.removeAttribute('data-gr-ext-installed');}catch(e){} })();",
           }}
         />
-        <CustomCursor />
-        <IntroProvider>
-          <SmoothScroll>{children}</SmoothScroll>
-        </IntroProvider>
+        {children}
       </body>
     </html>
   );
