@@ -16,8 +16,13 @@ export class UploadError extends Error {}
 
 const LOCAL_ROOT = path.join(process.cwd(), "public", "uploads");
 
+// The Vercel dashboard prefixes the variable when a store is connected with a
+// custom name (here "BLOB_PUB"), so accept both spellings.
+const BLOB_TOKEN = () =>
+  process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_PUB_READ_WRITE_TOKEN;
+
 export function isBlobConfigured() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  return Boolean(BLOB_TOKEN());
 }
 
 /** Without a Blob token, development builds save uploads into public/uploads. */
@@ -62,6 +67,7 @@ export async function storeImage(file: File, folder: ImageFolder) {
 
   if (isBlobConfigured()) {
     const blob = await put(name, Buffer.from(bytes), {
+      token: BLOB_TOKEN(),
       access: "public",
       contentType: CONTENT_TYPES[ext],
       cacheControlMaxAge: 60 * 60 * 24 * 365,
@@ -98,7 +104,7 @@ export async function removeImages(urls: Iterable<string>) {
     }
   }
   if (blobUrls.length > 0 && isBlobConfigured()) {
-    await del(blobUrls).catch((error) =>
+    await del(blobUrls, { token: BLOB_TOKEN() }).catch((error) =>
       console.error("Couldn't delete unused images:", error),
     );
   }
@@ -123,7 +129,12 @@ export async function sweepOrphanedImages(referenced: Set<string>) {
       for (const folder of IMAGE_FOLDERS) {
         let cursor: string | undefined;
         do {
-          const page = await list({ prefix: `${folder}/`, cursor, limit: 1000 });
+          const page = await list({
+            token: BLOB_TOKEN(),
+            prefix: `${folder}/`,
+            cursor,
+            limit: 1000,
+          });
           for (const blob of page.blobs) {
             if (!referenced.has(blob.url) && blob.uploadedAt.getTime() < cutoff) {
               orphans.push(blob.url);
