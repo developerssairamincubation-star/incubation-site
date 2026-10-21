@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import clsx from "clsx";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { SITE } from "@/lib/data";
@@ -61,6 +61,12 @@ const inputClasses =
 
 // Keep in step with the limit enforced by /api/apply.
 const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
+
+function formatSize(bytes: number) {
+  return bytes >= 1024 * 1024
+    ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
 
 const ORG_TYPES = ["Company / MSME", "Startup", "OPC", "Institution", "Others"];
 
@@ -315,6 +321,8 @@ export function ApplyForm({
   const [orgType, setOrgType] = useState("");
   const [thrustArea, setThrustArea] = useState("");
   const attachmentsId = useId();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attached, setAttached] = useState<File[]>([]);
   const stepNo = (standard: string, research: string) => (researchOnly ? research : standard);
   const isStudent = mode === "student";
   const isStartup = mode === "startup";
@@ -348,6 +356,24 @@ export function ApplyForm({
         ? "DESCRIBE YOUR IDEA — PROBLEM, SOLUTION, WHAT YOU NEED FROM US *"
         : "DESCRIBE YOUR VENTURE — PROBLEM, SOLUTION, WHAT YOU NEED FROM US *";
   const submitLabel = isPartner ? "Submit partnership request" : "Submit application";
+
+  // Mirror the chosen files into state so they can be listed and removed;
+  // the input itself stays the source of truth for the submitted FormData.
+  const syncFiles = (files: File[]) => {
+    const transfer = new DataTransfer();
+    files.forEach((file) => transfer.items.add(file));
+    if (fileInputRef.current) fileInputRef.current.files = transfer.files;
+    setAttached(files);
+    const total = files.reduce((sum, file) => sum + file.size, 0);
+    setStatus(
+      total > MAX_ATTACHMENT_BYTES
+        ? {
+            state: "error",
+            message: `Attachments total ${formatSize(total)} — the limit is 3 MB. Remove some, or share larger files through the link field.`,
+          }
+        : { state: "idle" },
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -400,6 +426,7 @@ export function ApplyForm({
       formEl.reset();
       setOrgType("");
       setThrustArea("");
+      setAttached([]);
       setStatus({ state: "sent" });
     } catch (error) {
       setStatus({
@@ -697,7 +724,37 @@ export function ApplyForm({
                     multiple
                     accept=".pdf,.doc,.docx,.ppt,.pptx,.mp4,.mov"
                     className="sr-only"
+                    ref={fileInputRef}
+                    onChange={(e) => {
+                      // A new pick replaces the browser's selection, so merge
+                      // with what was already attached (same name = replaced).
+                      const picked = Array.from(e.target.files ?? []);
+                      const kept = attached.filter((f) => !picked.some((p) => p.name === f.name));
+                      syncFiles([...kept, ...picked]);
+                    }}
                   />
+                  {attached.length > 0 ? (
+                    <ul className="space-y-2 text-[14px] text-ink">
+                      {attached.map((file) => (
+                        <li
+                          key={file.name}
+                          className="flex items-center justify-between gap-3 rounded-[4px] border border-line/40 bg-cream-soft/50 px-3 py-2"
+                        >
+                          <span className="min-w-0 truncate">
+                            {file.name} <span className="text-ink-soft">({formatSize(file.size)})</span>
+                          </span>
+                          <button
+                            type="button"
+                            aria-label={`Remove ${file.name}`}
+                            onClick={() => syncFiles(attached.filter((f) => f !== file))}
+                            className="shrink-0 text-[13px] font-semibold text-gold hover:text-ink"
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                   <TextInput
                     name="workLink"
                     label="LINK TO YOUR WORK — WEBSITE, VIDEO, DRIVE OR LINKEDIN"
