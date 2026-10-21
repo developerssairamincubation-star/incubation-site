@@ -9,6 +9,13 @@ export const SITE = {
 
 export const APPLICATION_EMAIL = "queries.rd@sairam.edu.in";
 
+// Everyone who receives submissions from the /apply and /rnd forms. The second
+// address is a testing copy — remove it once the forms are verified.
+export const APPLICATION_RECIPIENTS = [
+  APPLICATION_EMAIL,
+  "yazhinigayathri.2002@gmail.com",
+];
+
 export const NAV_LINKS = [
   { label: "Home", href: "#home" },
   { label: "About Us", href: "#about" },

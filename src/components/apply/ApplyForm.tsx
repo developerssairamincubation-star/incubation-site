@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import clsx from "clsx";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
-import { APPLICATION_EMAIL, SITE } from "@/lib/data";
+import { SITE } from "@/lib/data";
 
 type ApplicationMode = "student" | "startup" | "partner";
 type StudentTrack = "startup" | "research";
@@ -58,6 +58,9 @@ const ENGAGEMENTS = [
 
 const inputClasses =
   "w-full rounded-[4px] border border-line/60 bg-cream-soft/60 px-5 py-4 text-[16px] text-ink placeholder:text-ink-soft/70 outline-none transition-colors focus:border-gold";
+
+// Keep in step with the limit enforced by /api/apply.
+const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
 
 const ORG_TYPES = ["Company / MSME", "Startup", "OPC", "Institution", "Others"];
 
@@ -306,6 +309,9 @@ export function ApplyForm({
   const [mode, setMode] = useState<ApplicationMode>("student");
   const [studentTrack, setStudentTrack] = useState<StudentTrack>(researchOnly ? "research" : "startup");
   const [startupType, setStartupType] = useState<StartupType>("private-limited");
+  const [status, setStatus] = useState<
+    { state: "idle" | "sending" | "sent" } | { state: "error"; message: string }
+  >({ state: "idle" });
   const [orgType, setOrgType] = useState("");
   const [thrustArea, setThrustArea] = useState("");
   const attachmentsId = useId();
@@ -343,13 +349,22 @@ export function ApplyForm({
         : "DESCRIBE YOUR VENTURE — PROBLEM, SOLUTION, WHAT YOU NEED FROM US *";
   const submitLabel = isPartner ? "Submit partnership request" : "Submit application";
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const files = formData.getAll("attachments");
-    const fileNames = files
-      .map((entry) => (entry instanceof File ? entry.name : String(entry)))
-      .filter((name) => name && name !== "undefined");
+    if (status.state === "sending") return;
+    const formEl = e.currentTarget;
+    const formData = new FormData(formEl);
+    const files = formData
+      .getAll("attachments")
+      .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+
+    if (files.reduce((sum, file) => sum + file.size, 0) > MAX_ATTACHMENT_BYTES) {
+      setStatus({
+        state: "error",
+        message: "Attachments are over 3 MB in total. Remove some, or share larger files through the link field.",
+      });
+      return;
+    }
 
     const selectedTrack = isStudent
       ? studentTrack
@@ -364,17 +379,33 @@ export function ApplyForm({
       ...Array.from(formData.entries())
         .filter(([key, value]) => key !== "attachments" && String(value).trim().length > 0)
         .map(([key, value]) => `${getFieldLabel(key)}: ${String(value)}`),
-      ...(fileNames.length > 0 ? ["", `Attachments: ${fileNames.join(", ")}`] : []),
+      ...(files.length > 0 ? ["", `Attachments: ${files.map((file) => file.name).join(", ")}`] : []),
     ];
 
-    const subject = `Application from the website - ${mode}${isStudent ? ` / ${studentTrack}` : isStartup ? ` / ${startupType}` : ""}`;
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(APPLICATION_EMAIL)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`;
+    const subject = researchOnly
+      ? "Application from the website - R&D Services / research track"
+      : `Application from the website - ${mode}${isStudent ? ` / ${studentTrack}` : isStartup ? ` / ${startupType}` : ""}`;
 
-    const mailtoUrl = `mailto:${APPLICATION_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`;
+    const payload = new FormData();
+    payload.set("subject", subject);
+    payload.set("body", lines.join("\n"));
+    payload.set("replyTo", String(formData.get("email") ?? ""));
+    files.forEach((file) => payload.append("attachments", file));
 
-    const newTab = window.open(gmailUrl, "_blank", "noopener,noreferrer");
-    if (!newTab) {
-      window.location.href = mailtoUrl;
+    setStatus({ state: "sending" });
+    try {
+      const res = await fetch("/api/apply", { method: "POST", body: payload });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Something went wrong.");
+      formEl.reset();
+      setOrgType("");
+      setThrustArea("");
+      setStatus({ state: "sent" });
+    } catch (error) {
+      setStatus({
+        state: "error",
+        message: error instanceof Error ? error.message : "Something went wrong.",
+      });
     }
   };
 
@@ -647,9 +678,9 @@ export function ApplyForm({
               />
               <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_260px]">
                 <div className="space-y-4 rounded-[4px] border border-line/40 bg-cream-soft/50 p-5">
-                  <p className="text-[15px] font-medium text-ink">PDF, DOC/DOCX, PPT/PPTX, MP4/MOV — up to 5 files, 100 MB each</p>
+                  <p className="text-[15px] font-medium text-ink">PDF, DOC/DOCX, PPT/PPTX, MP4/MOV — up to 3 MB in total</p>
                   <p className="text-[15px] leading-relaxed text-ink-soft">
-                    Add the strongest evidence you have: deck, demo video, prototypes or a short writeup.
+                    Add your strongest evidence, like a deck or short writeup. For larger files such as videos, share a link below.
                   </p>
                 </div>
                 <div className="flex flex-col gap-4">
@@ -680,11 +711,24 @@ export function ApplyForm({
 
             <button
               type="submit"
-              className="inline-flex items-center gap-3 rounded-[4px] bg-ink px-8 py-4 text-[16px] font-semibold text-white transition-transform duration-300 hover:scale-[1.03]"
+              disabled={status.state === "sending"}
+              className="inline-flex items-center gap-3 rounded-[4px] bg-ink px-8 py-4 text-[16px] font-semibold text-white transition-transform duration-300 hover:scale-[1.03] disabled:cursor-wait disabled:opacity-60 disabled:hover:scale-100"
             >
-              {submitLabel}
+              {status.state === "sending" ? "Sending…" : submitLabel}
               <ArrowIcon className="text-[11px]" />
             </button>
+            <div aria-live="polite">
+              {status.state === "sent" ? (
+                <p className="text-[16px] font-medium text-ink">
+                  Thank you — your submission has been sent. We&apos;ll be in touch soon.
+                </p>
+              ) : null}
+              {status.state === "error" ? (
+                <p role="alert" className="text-[16px] font-medium text-rust">
+                  {status.message}
+                </p>
+              ) : null}
+            </div>
           </form>
         </div>
 
