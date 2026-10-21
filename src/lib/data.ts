@@ -14,6 +14,7 @@ export const NAV_LINKS = [
   { label: "About Us", href: "#about" },
   { label: "Thrust areas", href: "#thrust-areas" },
   { label: "Startups", href: "#startups" },
+  { label: "R&D Services", href: "/rnd" },
   { label: "Gallery", href: "#gallery" },
   // Hidden by the Header until at least one team member is added in /admin.
   { label: "Team", href: "#team" },

@@ -1,31 +1,33 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import clsx from "clsx";
-import React from "react";
 
-export default function ApplyHeaderClient() {
+export default function ApplyHeaderClient({ showInstitutions = false }: { showInstitutions?: boolean }) {
   const introDone = true;
-
-  function goTo(selector: string) {
-    try {
-      const el = document.querySelector(selector);
-      if (el && typeof (el as Element).scrollIntoView === "function") {
-        (el as Element).scrollIntoView({ behavior: "smooth" });
-        return;
-      }
-    } catch (e) {}
-    if (typeof window !== "undefined") window.location.hash = selector;
-  }
 
   return (
     <header className="border-b border-line bg-cream/90 shadow-[0px_0px_13px_rgba(0,0,0,0.06)] backdrop-blur-sm">
       <div className="mx-auto flex h-[72px] max-w-[1728px] items-center justify-between px-6 lg:px-10">
-        <button
-          type="button"
-          onClick={() => goTo("#home")}
+        <Link
+          href="/"
           aria-label="Sri Sairam Techno Incubator Foundation — home"
+          className={clsx(showInstitutions && "flex items-center gap-2.5 lg:gap-4")}
         >
+          {showInstitutions ? (
+            <>
+              <Image
+                src="/images/brand/sairam-institutions.webp"
+                alt="Sairam Institutions"
+                width={818}
+                height={240}
+                priority
+                className="h-7 w-auto lg:h-9"
+              />
+              <span aria-hidden className="h-6 w-px bg-line/50 lg:h-8" />
+            </>
+          ) : null}
           <Image
             id="header-logo"
             src="/images/logo.png"
@@ -38,7 +40,7 @@ export default function ApplyHeaderClient() {
               introDone ? "opacity-100" : "opacity-0",
             )}
           />
-        </button>
+        </Link>
         <div />
       </div>
     </header>

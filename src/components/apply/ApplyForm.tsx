@@ -59,6 +59,8 @@ const ENGAGEMENTS = [
 const inputClasses =
   "w-full rounded-[4px] border border-line/60 bg-cream-soft/60 px-5 py-4 text-[16px] text-ink placeholder:text-ink-soft/70 outline-none transition-colors focus:border-gold";
 
+const ORG_TYPES = ["Company / MSME", "Startup", "OPC", "Institution", "Others"];
+
 const FIELD_LABELS: Record<string, string> = {
   applicationType: "Application type",
   fullName: "Full name",
@@ -68,6 +70,8 @@ const FIELD_LABELS: Record<string, string> = {
   companyName: "Company name",
   startupName: "Startup name",
   institutionName: "Institution / college",
+  organizationType: "Applying as",
+  organizationName: "Name",
   cityState: "City / state",
   natureOfCompany: "Nature of company",
   domain: "Domain",
@@ -80,6 +84,7 @@ const FIELD_LABELS: Record<string, string> = {
   memberBio: "Member short bio",
   projectTitle: "Project title",
   thrustArea: "Thrust area",
+  thrustAreaOther: "Thrust area (other)",
   currentStage: "Current stage",
   teamSize: "Team size",
   projectDescription: "Project description",
@@ -144,15 +149,22 @@ function SelectInput({
   label,
   options,
   required = true,
+  onChange,
 }: {
   name: string;
   label: string;
   options: string[];
   required?: boolean;
+  onChange?: (value: string) => void;
 }) {
   return (
     <CardField label={label}>
-      <select name={name} required={required} defaultValue="" className={`${inputClasses} pr-12`}>
+      <select
+        name={name}
+        required={required}
+        defaultValue=""
+        onChange={onChange ? (e) => onChange(e.target.value) : undefined} className={`${inputClasses} pr-12`}
+      >
         <option value="" disabled>
           {options[0]}
         </option>
@@ -284,11 +296,20 @@ function TrackToggle({
   );
 }
 
-export function ApplyForm() {
+export function ApplyForm({
+  hideModeCards = false,
+  researchOnly = false,
+}: {
+  hideModeCards?: boolean;
+  researchOnly?: boolean;
+}) {
   const [mode, setMode] = useState<ApplicationMode>("student");
-  const [studentTrack, setStudentTrack] = useState<StudentTrack>("startup");
+  const [studentTrack, setStudentTrack] = useState<StudentTrack>(researchOnly ? "research" : "startup");
   const [startupType, setStartupType] = useState<StartupType>("private-limited");
+  const [orgType, setOrgType] = useState("");
+  const [thrustArea, setThrustArea] = useState("");
   const attachmentsId = useId();
+  const stepNo = (standard: string, research: string) => (researchOnly ? research : standard);
   const isStudent = mode === "student";
   const isStartup = mode === "startup";
   const isPartner = mode === "partner";
@@ -361,6 +382,7 @@ export function ApplyForm() {
     <div className="mx-auto max-w-[1728px] px-6 pb-16 lg:px-10 lg:pb-24">
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-10">
+          {hideModeCards ? null : (
           <div className="grid gap-5 lg:grid-cols-3">
             <ModeCard
               active={isStudent}
@@ -384,20 +406,23 @@ export function ApplyForm() {
               onClick={() => setMode("partner")}
             />
           </div>
+          )}
 
-          {mode !== "partner" ? (
+          {mode !== "partner" && !researchOnly ? (
             <div className="flex flex-wrap items-center gap-3">
               <p className="mr-2 text-[13px] tracking-[0.2em] text-ink-soft uppercase">
                 {isStudent ? "Track" : "Company type"}
               </p>
               {isStudent ? (
                 <>
-                  <TrackToggle
-                    label="Startup track"
-                    value="startup"
-                    active={studentTrack === "startup"}
-                    onClick={() => setStudentTrack("startup")}
-                  />
+                  {researchOnly ? null : (
+                    <TrackToggle
+                      label="Startup track"
+                      value="startup"
+                      active={studentTrack === "startup"}
+                      onClick={() => setStudentTrack("startup")}
+                    />
+                  )}
                   <TrackToggle
                     label="Research track"
                     value="research"
@@ -442,7 +467,7 @@ export function ApplyForm() {
 
             <section className="space-y-6 border border-line/45 bg-paper p-6 lg:p-8">
               <SectionTitle
-                step="STEP 03"
+                step={stepNo("STEP 03", "STEP 01")}
                 title={applicantFieldTitle}
                 description={
                   isPartner
@@ -473,6 +498,35 @@ export function ApplyForm() {
                     placeholder="Startup name"
                     autoComplete="organization"
                   />
+                ) : researchOnly ? (
+                  <>
+                    <CardField label="APPLYING AS *">
+                      <select
+                        name="organizationType"
+                        required
+                        value={orgType}
+                        onChange={(e) => setOrgType(e.target.value)}
+                        className={`${inputClasses} pr-12`}
+                      >
+                        <option value="" disabled>
+                          Select one
+                        </option>
+                        {ORG_TYPES.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </CardField>
+                    {orgType ? (
+                      <TextInput
+                        name="organizationName"
+                        label={`${orgType.toUpperCase()} NAME *`}
+                        placeholder={`${orgType} name`}
+                        autoComplete="organization"
+                      />
+                    ) : null}
+                  </>
                 ) : (
                   <TextInput
                     name="institutionName"
@@ -485,9 +539,10 @@ export function ApplyForm() {
               </div>
             </section>
 
+            {researchOnly ? null : (
             <section className="space-y-6 border border-line/45 bg-paper p-6 lg:p-8">
               <SectionTitle
-                step="STEP 03.B"
+                step={stepNo("STEP 03.B", "STEP 02")}
                 title={memberTitle}
                 description="Profiles help the panel know your team."
               />
@@ -525,10 +580,11 @@ export function ApplyForm() {
                 </button>
               </div>
             </section>
+            )}
 
             <section className="space-y-6 border border-line/45 bg-paper p-6 lg:p-8">
               <SectionTitle
-                step="STEP 04"
+                step={stepNo("STEP 04", "STEP 02")}
                 title={stepFourTitle}
                 description={
                   isPartner
@@ -552,7 +608,19 @@ export function ApplyForm() {
                     label={stepFourLabel}
                     placeholder={isStudent ? "Idea title" : "Venture name"}
                   />
-                  <SelectInput name="thrustArea" label="THRUST AREA *" options={THRUST_AREAS} />
+                  <SelectInput
+                    name="thrustArea"
+                    label="THRUST AREA *"
+                    options={researchOnly ? [...THRUST_AREAS, "Others"] : THRUST_AREAS}
+                    onChange={setThrustArea}
+                  />
+                  {researchOnly && thrustArea === "Others" ? (
+                    <TextInput
+                      name="thrustAreaOther"
+                      label="PLEASE SPECIFY THRUST AREA *"
+                      placeholder="Enter your thrust area"
+                    />
+                  ) : null}
                   <SelectInput name="currentStage" label="CURRENT STAGE *" options={STAGES} />
                   <TextInput name="teamSize" label="TEAM SIZE" placeholder="e.g. 3" required={false} />
                   <TextAreaInput
@@ -573,7 +641,7 @@ export function ApplyForm() {
 
             <section className="space-y-6 border border-line/45 bg-paper p-6 lg:p-8">
               <SectionTitle
-                step="STEP 05"
+                step={stepNo("STEP 05", "STEP 03")}
                 title="Attachments"
                 description="Optional, but recommended. Upload a pitch deck, demo video or supporting documents."
               />

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
 import { NAV_LINKS } from "@/lib/data";
@@ -12,12 +13,13 @@ export function Header({ showTeam = false }: { showTeam?: boolean }) {
   const { introDone } = useIntro();
   const [active, setActive] = useState("#home");
   const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter();
   const links = NAV_LINKS.filter((link) => showTeam || link.href !== "#team");
 
   // Scroll-spy: highlight the nav link of the section in view. Sections that
   // aren't on the page (e.g. #team before any members exist) are skipped.
   useEffect(() => {
-    const sections = NAV_LINKS.map((l) =>
+    const sections = NAV_LINKS.filter((l) => l.href.startsWith("#")).map((l) =>
       document.querySelector<HTMLElement>(l.href),
     ).filter((el): el is HTMLElement => el !== null);
 
@@ -35,7 +37,8 @@ export function Header({ showTeam = false }: { showTeam?: boolean }) {
 
   const goTo = (href: string) => {
     setMenuOpen(false);
-    scrollToTarget(href);
+    if (href.startsWith("/")) router.push(href);
+    else scrollToTarget(href);
   };
 
   return (
