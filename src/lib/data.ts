@@ -1,6 +1,6 @@
 export const SITE = {
   name: "Sri Sairam Techno Incubator Foundation",
-  phone: "+91 78451 27111",
+  phone: "+91 80562 35681",
   emails: ["incubation@sairam.edu.in", "queries.rd@sairam.edu.in"],
   linkedin: "https://www.linkedin.com/in/sstif/",
   address: "Sai Leo Nagar, West Tambaram, Chennai — 600 044",
