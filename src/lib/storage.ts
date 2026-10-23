@@ -16,16 +16,26 @@ export class UploadError extends Error {}
 
 const LOCAL_ROOT = path.join(process.cwd(), "public", "uploads");
 
-// The Vercel dashboard prefixes the variable when a store is connected with a
-// custom name (here "BLOB_PUB"), so accept both spellings.
+// Connecting a store under a custom name (here "BLOB_PUB") prefixes every
+// variable Vercel adds, so accept the prefixed spellings as well.
 const BLOB_TOKEN = () =>
   process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_PUB_READ_WRITE_TOKEN;
 
+// Newer stores authenticate with OIDC instead of a token: Vercel adds only the
+// store id, and the SDK signs requests with the deployment's OIDC token.
+const BLOB_STORE_ID = () => process.env.BLOB_STORE_ID || process.env.BLOB_PUB_STORE_ID;
+
 export function isBlobConfigured() {
-  return Boolean(BLOB_TOKEN());
+  return Boolean(BLOB_TOKEN() || BLOB_STORE_ID());
 }
 
-/** Without a Blob token, development builds save uploads into public/uploads. */
+/** Credentials for every Blob call: a token if there is one, otherwise OIDC. */
+function blobAuth() {
+  const token = BLOB_TOKEN();
+  return token ? { token } : { storeId: BLOB_STORE_ID() };
+}
+
+/** Without a Blob store, development builds save uploads into public/uploads. */
 function canUseLocalUploads() {
   return process.env.NODE_ENV !== "production";
 }
@@ -67,7 +77,7 @@ export async function storeImage(file: File, folder: ImageFolder) {
 
   if (isBlobConfigured()) {
     const blob = await put(name, Buffer.from(bytes), {
-      token: BLOB_TOKEN(),
+      ...blobAuth(),
       access: "public",
       contentType: CONTENT_TYPES[ext],
       cacheControlMaxAge: 60 * 60 * 24 * 365,
@@ -104,7 +114,7 @@ export async function removeImages(urls: Iterable<string>) {
     }
   }
   if (blobUrls.length > 0 && isBlobConfigured()) {
-    await del(blobUrls, { token: BLOB_TOKEN() }).catch((error) =>
+    await del(blobUrls, blobAuth()).catch((error) =>
       console.error("Couldn't delete unused images:", error),
     );
   }
@@ -130,7 +140,7 @@ export async function sweepOrphanedImages(referenced: Set<string>) {
         let cursor: string | undefined;
         do {
           const page = await list({
-            token: BLOB_TOKEN(),
+            ...blobAuth(),
             prefix: `${folder}/`,
             cursor,
             limit: 1000,
