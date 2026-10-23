@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import "react-easy-crop/react-easy-crop.css";
 import { Button } from "./ui";
-import { cropAndResizeImage, fitImage, type ResizedImage } from "./resize";
+import { cropAndResizeImage, fitImage, resizeImage, type ResizedImage } from "./resize";
 
 type Mode = "crop" | "fit";
 
@@ -25,6 +25,8 @@ export function CropDialog({
   targetHeight,
   keepTransparency = false,
   quality = 0.85,
+  wholeImage = "pad",
+  keepLimits,
   onCancel,
   onConfirm,
 }: {
@@ -34,6 +36,10 @@ export function CropDialog({
   targetHeight: number;
   keepTransparency?: boolean;
   quality?: number;
+  /** "pad" bakes padding into the target ratio; "keep" returns the whole photo unchanged. */
+  wholeImage?: "pad" | "keep";
+  /** Size cap for "keep". */
+  keepLimits?: { maxWidth: number; maxHeight: number };
   onCancel: () => void;
   onConfirm: (result: ResizedImage) => void;
 }) {
@@ -68,7 +74,17 @@ export function CropDialog({
     try {
       const result =
         mode === "fit"
-          ? await fitImage(file, targetWidth, targetHeight, { keepTransparency, quality })
+          ? wholeImage === "keep"
+            ? {
+                ...(await resizeImage(file, {
+                  maxWidth: keepLimits?.maxWidth ?? targetWidth,
+                  maxHeight: keepLimits?.maxHeight ?? targetHeight,
+                  keepTransparency,
+                  quality,
+                })),
+                whole: true,
+              }
+            : await fitImage(file, targetWidth, targetHeight, { keepTransparency, quality })
           : await cropAndResizeImage(
               file,
               croppedAreaPixels!,
@@ -166,8 +182,9 @@ export function CropDialog({
             </div>
           ) : (
             <p className="text-[12.5px] text-ink-soft">
-              Shows the whole photo with padding added on the sides — nothing gets cropped
-              out. Use this if cropping would cut off something that matters.
+              {wholeImage === "keep"
+                ? "Shows the whole photo, with nothing cropped out, inside the frame — with rounded corners, like the other photos. Use this for portrait or unusually shaped photos."
+                : "Shows the whole photo with padding added on the sides — nothing gets cropped out. Use this if cropping would cut off something that matters."}
             </p>
           )}
           {error && <p className="text-[12.5px] text-rust">{error}</p>}

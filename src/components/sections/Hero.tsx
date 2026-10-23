@@ -193,16 +193,38 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
               {slides.map((slide, i) => (
                 <div key={slide.id} className="min-w-0 flex-[0_0_100%]">
                   <div className="relative aspect-[4/3] overflow-hidden rounded-[28px]">
-                    <div data-parallax className="absolute inset-[-15%_-18%]">
-                      <Image
-                        src={slide.src}
-                        alt={slide.alt}
-                        fill
-                        sizes="(min-width: 1024px) 44vw, 100vw"
-                        priority={i === 0}
-                        className="object-cover"
-                      />
-                    </div>
+                    {slide.fit === "contain" && slide.width && slide.height ? (
+                      // Whole-photo slide: no overscan for the parallax drift (it
+                      // would crop the edges), and the photo rounds its own
+                      // corners instead of leaving them to the frame.
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Image
+                          src={slide.src}
+                          alt={slide.alt}
+                          width={slide.width}
+                          height={slide.height}
+                          sizes="(min-width: 1024px) 48vw, 100vw"
+                          priority={i === 0}
+                          className={clsx(
+                            "rounded-[28px]",
+                            slide.width / slide.height >= 4 / 3
+                              ? "h-auto w-full"
+                              : "h-full w-auto",
+                          )}
+                        />
+                      </div>
+                    ) : (
+                      <div data-parallax className="absolute inset-[-15%_-18%]">
+                        <Image
+                          src={slide.src}
+                          alt={slide.alt}
+                          fill
+                          sizes="(min-width: 1024px) 44vw, 100vw"
+                          priority={i === 0}
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

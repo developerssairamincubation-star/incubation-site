@@ -48,6 +48,11 @@ export const heroSlideSchema = z.object({
   id,
   src: imageSrc,
   alt: text("Description", 160),
+  /** "contain" shows the whole photo (its own rounded corners) instead of filling the frame. */
+  fit: z.enum(["cover", "contain"]).optional(),
+  /** Pixel size of the stored photo; used to lay out "contain" slides. */
+  width: z.number().int().positive().max(10000).optional(),
+  height: z.number().int().positive().max(10000).optional(),
 });
 
 export const photoSchema = z.object({

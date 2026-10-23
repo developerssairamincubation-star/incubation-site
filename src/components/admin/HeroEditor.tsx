@@ -108,10 +108,17 @@ export function HeroEditor({ initial, version }: { initial: HeroSlide[]; version
                       resize={{ maxWidth: 2000, maxHeight: 2000 }}
                       previewClass="aspect-[4/3]"
                       cropAspect={4 / 3}
+                      wholeImage="keep"
+                      fit={slide.fit === "contain" ? "contain" : "cover"}
                       error={editor.errorFor(i, "src")}
-                      onPicked={({ url }) => {
+                      onPicked={({ url, width, height, whole }) => {
                         editor.trackUpload(url);
-                        editor.update(slide.id, { src: url });
+                        editor.update(slide.id, {
+                          src: url,
+                          fit: whole ? "contain" : "cover",
+                          width,
+                          height,
+                        });
                       }}
                     />
                     <Field

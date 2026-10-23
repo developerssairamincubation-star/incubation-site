@@ -6,7 +6,13 @@ export type ResizeOptions = {
   quality?: number;
 };
 
-export type ResizedImage = { file: File; width: number; height: number };
+export type ResizedImage = {
+  file: File;
+  width: number;
+  height: number;
+  /** True when the whole photo was kept as-is (no crop, no padding). */
+  whole?: boolean;
+};
 
 export type CropPixels = { x: number; y: number; width: number; height: number };
 

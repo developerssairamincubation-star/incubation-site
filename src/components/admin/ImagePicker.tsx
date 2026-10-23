@@ -8,7 +8,7 @@ import type { ImageFolder } from "@/lib/storage";
 import { CropDialog } from "./CropDialog";
 import { resizeImage, type ResizedImage, type ResizeOptions } from "./resize";
 
-export type PickedImage = { url: string; width: number; height: number };
+export type PickedImage = { url: string; width: number; height: number; whole?: boolean };
 
 /**
  * Shows the current image and swaps it for a new upload. The file is resized
@@ -26,6 +26,7 @@ export function ImagePicker({
   fit = "cover",
   error,
   cropAspect,
+  wholeImage,
 }: {
   value: string;
   onPicked: (image: PickedImage) => void;
@@ -37,6 +38,8 @@ export function ImagePicker({
   error?: string;
   /** When set, the admin crops to this exact aspect ratio before upload. */
   cropAspect?: number;
+  /** How "Fit whole image" behaves in the crop dialog — see CropDialog. */
+  wholeImage?: "pad" | "keep";
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -53,7 +56,12 @@ export function ImagePicker({
       form.append("folder", folder);
       const result = await uploadImage(form);
       if (!result.ok) throw new Error(result.error);
-      onPicked({ url: result.url, width: resized.width, height: resized.height });
+      onPicked({
+        url: result.url,
+        width: resized.width,
+        height: resized.height,
+        whole: resized.whole,
+      });
     } catch (e) {
       setUploadError(e instanceof Error ? e.message : "The upload failed.");
     } finally {
@@ -168,6 +176,8 @@ export function ImagePicker({
           targetHeight={targetHeight}
           keepTransparency={resize.keepTransparency}
           quality={resize.quality}
+          wholeImage={wholeImage}
+          keepLimits={{ maxWidth: resize.maxWidth, maxHeight: resize.maxHeight }}
           onCancel={() => {
             setPendingFile(null);
             if (inputRef.current) inputRef.current.value = "";
